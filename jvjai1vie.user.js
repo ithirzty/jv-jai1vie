@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.4
+// @version      0.5
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -116,7 +116,7 @@ function addNotification(e) {
         if (!found) {
             msgs.push({
                 id: msg,
-                contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/\s+/igm, ' '),
+                contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/\s+/igm, ' ').innerText.replace(/ : /igm, ':'),
                 topic: document.querySelector("#bloc-title-forum").innerText,
                 date: Date.now()
             })
@@ -133,7 +133,9 @@ function addNotification(e) {
 
     setInterval(()=>{
         msgs.forEach(m => {
-            let req = "Le "+m.id + " " + (m.contents.replace(/\n/igm, ' ').substr(0, 50))
+            let req = "Le "+m.id + " " + (m.contents.replace(/\n/igm, ' ').substr(0, 60))
+            req = req.replace(/\s+/igm, ' ')
+            req = req.replace(/ : /igm, ':')
             req = req.replace(/(\d{2}):\d{2}:(\d{2})/igm, "$1$2")
             req = req.replace(/(.*) \w*/igm, '$1')
             req = req.replace(/\s/igm, '+')
