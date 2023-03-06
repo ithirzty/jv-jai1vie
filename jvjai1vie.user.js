@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.7
+// @version      0.8
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -13,6 +13,7 @@
 let msgs = []
 let resps = []
 let ignoreMsgs = []
+let currIndex = 0
 
 async function makeDomRequest(url) {
     let r = await fetch(url)
@@ -122,32 +123,33 @@ function addNotification(e) {
                 date: Date.now()
             })
         }
-        let nmsgs = []
-        msgs.forEach(m => {
-            if (m.date - Date.now() < 10800000) {
-                nmsgs.push(m)
-            } else {
-                console.log("removing...")
-            }
-        })
-        msgs = nmsgs
         window.localStorage.setItem("JV_MENTIONS_msgs", JSON.stringify(msgs))
     })
 
     setInterval(()=>{
-        msgs.forEach(m => {
-            let req = "Le "+m.id + " " + (m.contents.replace(/\n/igm, ' ').substr(0, 60))
+        let startIndex = currIndex
+        for (let i = 0; i < 3; i++) {
+            msgs[currIndex].noReps++
+            window.localStorage.setItem("JV_MENTIONS_msgs", JSON.stringify(msgs))
+            let m = msgs[currIndex]
+            currIndex = (currIndex + 1) % msgs.length
+            if (startIndex == currIndex) {
+                break
+            }
+            if (m.noReps > 60 || Date.now() - m.date > 10800000) {
+                i--
+                continue
+            }
+            let req = "Le "+m.id + " " + (m.contents.replace(/\n/igm, ' ').substr(0, 100))
+            req = req.replace(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9\(\)@:%_\+.~#?&\/=])*/igm, " ")
+            req = req.replace(/\?/igm, ' ')
             req = req.replace(/\s+/igm, ' ')
-            req = req.replace(/ : /igm, ':')
             req = req.replace(/(\d{2}):\d{2}:(\d{2})/igm, "$1$2")
-            req = req.replace(/(.*) \w*/igm, '$1')
+            req = req.replace(/(.*) [a-zA-Z\u00C0-\u00FF]*/igm, '$1')
             req = req.replace(/\s/igm, '+')
-            console.log(req)
+            console.log("Making request ("+m.noReps+"/60):", req)
             makeDomRequest("https://www.jeuxvideo.com/recherche/forums/0-51-0-1-0-1-0-blabla-18-25-ans.htm?search_in_forum="+req+"&type_search_in_forum=texte_message").then(doc => {
-                let hasRep = false
                 doc.querySelectorAll(".message .topic-title").forEach(e=>{
-                    hasRep = true
-                    m.noReps = 0
                     let found = false
                     let mid = e.getAttribute("href").split("#post_")[1]
                     resps.forEach(r=>{
@@ -161,20 +163,20 @@ function addNotification(e) {
                     if (ignoreMsgs.includes(mid)) {
                         return
                     }
-                    console.log("making message request")
                     makeDomRequest("https://www.jeuxvideo.com/forums/message/"+mid).then(msgDoc => {
                         ignoreMsgs.push(mid)
                         msgDoc.querySelectorAll(".blockquote-jv").forEach(q=>{
                             let msgBody = q.innerText.split(":").slice(3).join(":").replace(/\s+/igm, ' ').replace(/ *: */igm, ':')
-                            console.log(levenshtein(msgBody, m.contents))
-                            console.log(m.contents)
-                            console.log(msgBody)
                             if (msgDoc.querySelectorAll("a.breadcrumb__item")[msgDoc.querySelectorAll("a.breadcrumb__item").length-1].innerText.substr(6) != m.topic) {
-                                console.log("topac: ",msgDoc.querySelectorAll("a.breadcrumb__item")[msgDoc.querySelectorAll("a.breadcrumb__item").length-1].innerText.substr(6)," != ",m.topic)
+                                return
+                            }
+                            if (msgDoc.querySelector(".bloc-pseudo-msg").innerText == pseudo) {
                                 return
                             }
                             if (levenshtein(msgBody, m.contents) < 3) {
                                 console.log("Found!")
+                                m.noReps = 0
+                                window.localStorage.setItem("JV_MENTIONS_msgs", JSON.stringify(msgs))
                                 let not = {
                                     id: mid,
                                     link: msgDoc.querySelector(".bloc-return-topic a").getAttribute("href"),
@@ -191,24 +193,8 @@ function addNotification(e) {
                         })
                     })
                     })
-                if (!hasRep) {
-                    let nmsgs = []
-                    msgs.forEach(mi => {
-                        if (mi.id != m.id) {
-                            nmsgs.push(mi)
-                        } else {
-                            let nm = m
-                            nm.noReps++
-                            if (nm.noReps < 60) {
-                                nmsgs.push(nm)
-                            }
-                        }
-                    })
-                    msgs = nmsgs
-                    window.localStorage.setItem("JV_MENTIONS_msgs", JSON.stringify(msgs))
-                }
             })
-        })
+        }
     window.localStorage.setItem("JV_MENTIONS_ignore", JSON.stringify(ignoreMsgs))
     }, 10000)
 
