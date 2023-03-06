@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.3
+// @version      0.4
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -49,7 +49,7 @@ function addNotification(e) {
 
     notif.innerHTML = `
     <span class="headerAccount__dropdownAvatar" style="background-image:url('${e.image}')"></span><div class="headerAccount__dropdownDetails"><span class="headerAccount__dropdownSubInfo headerAccount__dropdownSubInfo--author">
-                            <em>${e.pseudo}</em> t'as répondu
+                            <em>${e.pseudo}</em> t'a répondu
                         </span><a href="${e.link}" class="headerAccount__dropdownItemLabel stretched-link js-header-open-notif">
                         <em>${e.pseudo}</em> t'as répondu dans le topic <em>${e.topic}</em>
                     </a></div><span class="headerAccount__dropdownSubInfo"><span class="headerAccount__dropdownSubInfoDate">${e.date}</span></span>
@@ -117,7 +117,7 @@ function addNotification(e) {
             msgs.push({
                 id: msg,
                 contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/\s+/igm, ' '),
-                topic: document.querySelector("#bloc-title-forum"),
+                topic: document.querySelector("#bloc-title-forum").innerText,
                 date: Date.now()
             })
         }
@@ -155,14 +155,18 @@ function addNotification(e) {
                     if (ignoreMsgs.includes(mid)) {
                         return
                     }
-                    ignoreMsgs.push(mid)
                     console.log("making message request")
                     makeDomRequest("https://www.jeuxvideo.com/forums/message/"+mid).then(msgDoc => {
+                        ignoreMsgs.push(mid)
                         msgDoc.querySelectorAll(".blockquote-jv").forEach(q=>{
                             let msgBody = q.innerText.split(":").slice(3).join(":").replace(/\s+/igm, ' ')
                             console.log(levenshtein(msgBody, m.contents))
                             console.log(m.contents)
                             console.log(msgBody)
+                            if (msgDoc.querySelectorAll("a.breadcrumb__item")[msgDoc.querySelectorAll("a.breadcrumb__item").length-1].innerText.substr(6) != m.topic) {
+                                console.log("topac: ",msgDoc.querySelectorAll("a.breadcrumb__item")[msgDoc.querySelectorAll("a.breadcrumb__item").length-1].innerText.substr(6)," != ",m.topic)
+                                return
+                            }
                             if (levenshtein(msgBody, m.contents) < 3) {
                                 console.log("Found!")
                                 let not = {
@@ -193,6 +197,7 @@ function addNotification(e) {
                 }
             })
         })
+    window.localStorage.setItem("JV_MENTIONS_ignore", JSON.stringify(ignoreMsgs))
     }, 10000)
 
 
