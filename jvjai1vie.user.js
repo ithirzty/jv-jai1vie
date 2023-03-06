@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.5
+// @version      0.6
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -116,7 +116,7 @@ function addNotification(e) {
         if (!found) {
             msgs.push({
                 id: msg,
-                contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/\s+/igm, ' ').innerText.replace(/ : /igm, ':'),
+                contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/\s+/igm, ' ').replace(/ : /igm, ':'),
                 topic: document.querySelector("#bloc-title-forum").innerText,
                 date: Date.now()
             })
