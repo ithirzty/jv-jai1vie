@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.2
+// @version      0.3
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -12,6 +12,7 @@
 
 let msgs = []
 let resps = []
+let ignoreMsgs = []
 
 async function makeDomRequest(url) {
     let r = await fetch(url)
@@ -88,6 +89,10 @@ function addNotification(e) {
         msgs = JSON.parse(window.localStorage.getItem("JV_MENTIONS_msgs"))
     }
 
+    if (window.localStorage.getItem("JV_MENTIONS_ignore")) {
+        ignoreMsgs = JSON.parse(window.localStorage.getItem("JV_MENTIONS_ignore"))
+    }
+
     if (window.localStorage.getItem("JV_MENTIONS_resps")) {
         resps = JSON.parse(window.localStorage.getItem("JV_MENTIONS_resps"))
         resps.forEach(e=>{
@@ -112,6 +117,7 @@ function addNotification(e) {
             msgs.push({
                 id: msg,
                 contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/\s+/igm, ' '),
+                topic: document.querySelector("#bloc-title-forum"),
                 date: Date.now()
             })
         }
@@ -146,6 +152,10 @@ function addNotification(e) {
                     if (found) {
                         return
                     }
+                    if (ignoreMsgs.includes(mid)) {
+                        return
+                    }
+                    ignoreMsgs.push(mid)
                     console.log("making message request")
                     makeDomRequest("https://www.jeuxvideo.com/forums/message/"+mid).then(msgDoc => {
                         msgDoc.querySelectorAll(".blockquote-jv").forEach(q=>{
