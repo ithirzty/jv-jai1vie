@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.1
+// @version      0.2
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -111,7 +111,7 @@ function addNotification(e) {
         if (!found) {
             msgs.push({
                 id: msg,
-                contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText,
+                contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/\s+/igm, ' '),
                 date: Date.now()
             })
         }
@@ -127,7 +127,8 @@ function addNotification(e) {
 
     setInterval(()=>{
         msgs.forEach(m => {
-            let req = "Le "+m.id.replace(/(\d{2}):\d{2}:(\d{2})/igm, "$1$2") + " " + (m.contents.replace(/\n/igm, ' ').substr(0, 50))
+            let req = "Le "+m.id + " " + (m.contents.replace(/\n/igm, ' ').substr(0, 50))
+            req = req.replace(/(\d{2}):\d{2}:(\d{2})/igm, "$1$2")
             req = req.replace(/(.*) \w*/igm, '$1')
             req = req.replace(/\s/igm, '+')
             console.log(req)
@@ -148,10 +149,11 @@ function addNotification(e) {
                     console.log("making message request")
                     makeDomRequest("https://www.jeuxvideo.com/forums/message/"+mid).then(msgDoc => {
                         msgDoc.querySelectorAll(".blockquote-jv").forEach(q=>{
-                            console.log(levenshtein(q.innerText.split(":")[3], m.contents))
+                            let msgBody = q.innerText.split(":").slice(3).join(":").replace(/\s+/igm, ' ')
+                            console.log(levenshtein(msgBody, m.contents))
                             console.log(m.contents)
-                            console.log(q.innerText.split(":")[3])
-                            if (levenshtein(q.innerText.split(":")[3], m.contents) < 3) {
+                            console.log(msgBody)
+                            if (levenshtein(msgBody, m.contents) < 3) {
                                 console.log("Found!")
                                 let not = {
                                     id: mid,
