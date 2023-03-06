@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.8
+// @version      0.9
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -117,7 +117,7 @@ function addNotification(e) {
         if (!found) {
             msgs.push({
                 id: msg,
-                contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/\s+/igm, ' ').replace(/ *: */igm, ':'),
+                contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/ +/igm, ' ').replace(/ *: */igm, ':'),
                 topic: document.querySelector("#bloc-title-forum").innerText,
                 noReps: 0,
                 date: Date.now()
@@ -127,22 +127,23 @@ function addNotification(e) {
     })
 
     setInterval(()=>{
-        let startIndex = currIndex
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0, j = 0; i < 3; i++, j++) {
+            if (j > msgs.length) {
+                break
+            }
             msgs[currIndex].noReps++
             window.localStorage.setItem("JV_MENTIONS_msgs", JSON.stringify(msgs))
             let m = msgs[currIndex]
             currIndex = (currIndex + 1) % msgs.length
-            if (startIndex == currIndex) {
-                break
-            }
             if (m.noReps > 60 || Date.now() - m.date > 10800000) {
                 i--
+                console.log("Skipping:", m.id)
                 continue
             }
+            console.log("Searching:", m.id)
             let req = "Le "+m.id + " " + (m.contents.replace(/\n/igm, ' ').substr(0, 100))
             req = req.replace(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9\(\)@:%_\+.~#?&\/=])*/igm, " ")
-            req = req.replace(/\?/igm, ' ')
+            req = req.replace(/\?|-/igm, ' ')
             req = req.replace(/\s+/igm, ' ')
             req = req.replace(/(\d{2}):\d{2}:(\d{2})/igm, "$1$2")
             req = req.replace(/(.*) [a-zA-Z\u00C0-\u00FF]*/igm, '$1')
@@ -166,14 +167,16 @@ function addNotification(e) {
                     makeDomRequest("https://www.jeuxvideo.com/forums/message/"+mid).then(msgDoc => {
                         ignoreMsgs.push(mid)
                         msgDoc.querySelectorAll(".blockquote-jv").forEach(q=>{
-                            let msgBody = q.innerText.split(":").slice(3).join(":").replace(/\s+/igm, ' ').replace(/ *: */igm, ':')
+                            let msgBody = q.innerText.split(":").slice(3).join(":").replace(/ +/igm, ' ').replace(/ *: */igm, ':')
                             if (msgDoc.querySelectorAll("a.breadcrumb__item")[msgDoc.querySelectorAll("a.breadcrumb__item").length-1].innerText.substr(6) != m.topic) {
                                 return
                             }
                             if (msgDoc.querySelector(".bloc-pseudo-msg").innerText == pseudo) {
                                 return
                             }
-                            if (levenshtein(msgBody, m.contents) < 3) {
+                            let mLookupBody = m.contents.replace(/\n/igm, '')
+                            console.log(levenshtein(msgBody, mLookupBody), msgBody, mLookupBody)
+                            if (levenshtein(msgBody, mLookupBody) <= 3) {
                                 console.log("Found!")
                                 m.noReps = 0
                                 window.localStorage.setItem("JV_MENTIONS_msgs", JSON.stringify(msgs))
