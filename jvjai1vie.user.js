@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.6
+// @version      0.7
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -116,8 +116,9 @@ function addNotification(e) {
         if (!found) {
             msgs.push({
                 id: msg,
-                contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/\s+/igm, ' ').replace(/ : /igm, ':'),
+                contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/\s+/igm, ' ').replace(/ *: */igm, ':'),
                 topic: document.querySelector("#bloc-title-forum").innerText,
+                noReps: 0,
                 date: Date.now()
             })
         }
@@ -125,6 +126,8 @@ function addNotification(e) {
         msgs.forEach(m => {
             if (m.date - Date.now() < 10800000) {
                 nmsgs.push(m)
+            } else {
+                console.log("removing...")
             }
         })
         msgs = nmsgs
@@ -144,6 +147,7 @@ function addNotification(e) {
                 let hasRep = false
                 doc.querySelectorAll(".message .topic-title").forEach(e=>{
                     hasRep = true
+                    m.noReps = 0
                     let found = false
                     let mid = e.getAttribute("href").split("#post_")[1]
                     resps.forEach(r=>{
@@ -161,7 +165,7 @@ function addNotification(e) {
                     makeDomRequest("https://www.jeuxvideo.com/forums/message/"+mid).then(msgDoc => {
                         ignoreMsgs.push(mid)
                         msgDoc.querySelectorAll(".blockquote-jv").forEach(q=>{
-                            let msgBody = q.innerText.split(":").slice(3).join(":").replace(/\s+/igm, ' ')
+                            let msgBody = q.innerText.split(":").slice(3).join(":").replace(/\s+/igm, ' ').replace(/ *: */igm, ':')
                             console.log(levenshtein(msgBody, m.contents))
                             console.log(m.contents)
                             console.log(msgBody)
@@ -191,7 +195,13 @@ function addNotification(e) {
                     let nmsgs = []
                     msgs.forEach(mi => {
                         if (mi.id != m.id) {
-                            nmsgs.push(m)
+                            nmsgs.push(mi)
+                        } else {
+                            let nm = m
+                            nm.noReps++
+                            if (nm.noReps < 60) {
+                                nmsgs.push(nm)
+                            }
                         }
                     })
                     msgs = nmsgs
