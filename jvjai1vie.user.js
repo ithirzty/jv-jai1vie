@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.9
+// @version      0.91
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -52,7 +52,7 @@ function addNotification(e) {
     <span class="headerAccount__dropdownAvatar" style="background-image:url('${e.image}')"></span><div class="headerAccount__dropdownDetails"><span class="headerAccount__dropdownSubInfo headerAccount__dropdownSubInfo--author">
                             <em>${e.pseudo}</em> t'a répondu
                         </span><a href="${e.link}" class="headerAccount__dropdownItemLabel stretched-link js-header-open-notif">
-                        <em>${e.pseudo}</em> t'as répondu dans le topic <em>${e.topic}</em>
+                        <em>${e.pseudo}</em> t'a répondu dans le topic <em>${e.topic}</em>
                     </a></div><span class="headerAccount__dropdownSubInfo"><span class="headerAccount__dropdownSubInfoDate">${e.date}</span></span>
    `
     notif.onclick = ()=> {
