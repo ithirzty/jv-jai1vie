@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.92
+// @version      0.93
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -93,10 +93,10 @@ function addNotification(e) {
     document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.querySelector(".headerAccount__dropdownContainerTop").style.height = "auto"
 
     document.querySelector(".headerAccount__pm").addEventListener("click", ()=>{
-        msgs.forEach(m => {
+        resps.forEach(m => {
             m.read = true
         })
-        window.localStorage.setItem("JV_MENTIONS_msgs", JSON.stringify(msgs))
+        window.localStorage.setItem("JV_MENTIONS_resps", JSON.stringify(resps))
     }, false)
 
     if (window.localStorage.getItem("JV_MENTIONS_msgs")) {
