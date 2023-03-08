@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.91
+// @version      0.92
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
+// @downloadURL  https://github.com/ithirzty/jv-jai1vie/raw/main/jvjai1vie.user.js
+// @updateURL    https://github.com/ithirzty/jv-jai1vie/raw/main/jvjai1vie.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=jeuxvideo.com
 // @grant        none
 // ==/UserScript==
@@ -14,9 +16,13 @@ let msgs = []
 let resps = []
 let ignoreMsgs = []
 let currIndex = 0
+let rateLimited = false
 
 async function makeDomRequest(url) {
     let r = await fetch(url)
+    if (r.status != 200) {
+        return null
+    }
     let t = await r.text()
     return new DOMParser().parseFromString(t, 'text/html')
 }
@@ -83,8 +89,15 @@ function addNotification(e) {
     document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.style.overflowY = "auto"
     document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").style.position = "initial"
     document.querySelector(".headerAccount__harassmentWarning").parentNode.style.display = "none"
-    document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.querySelector(".headerAccount__dropdownContainerTop").innerHTML += "<hr><div id=\"JV_MENTIONS_notifs\"><p>Fin des réponses.</p></div>"
+    document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.querySelector(".headerAccount__dropdownContainerTop").innerHTML += "<hr><div id=\"JV_MENTIONS_notifs\"><p>Fin des réponses. (status: <span id=\"JV_MENTIONS_status\">normal</span>)</p></div>"
     document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.querySelector(".headerAccount__dropdownContainerTop").style.height = "auto"
+
+    document.querySelector(".headerAccount__pm").addEventListener("click", ()=>{
+        msgs.forEach(m => {
+            m.read = true
+        })
+        window.localStorage.setItem("JV_MENTIONS_msgs", JSON.stringify(msgs))
+    }, false)
 
     if (window.localStorage.getItem("JV_MENTIONS_msgs")) {
         msgs = JSON.parse(window.localStorage.getItem("JV_MENTIONS_msgs"))
@@ -115,6 +128,7 @@ function addNotification(e) {
             }
         })
         if (!found) {
+            console.log("adding")
             msgs.push({
                 id: msg,
                 contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/ +/igm, ' ').replace(/ *: */igm, ':'),
@@ -127,6 +141,11 @@ function addNotification(e) {
     })
 
     setInterval(()=>{
+        if (rateLimited) {
+            rateLimited = false
+            console.log("skipping one round")
+            return
+        }
         for (let i = 0, j = 0; i < 3; i++, j++) {
             if (j > msgs.length) {
                 break
@@ -150,6 +169,17 @@ function addNotification(e) {
             req = req.replace(/\s/igm, '+')
             console.log("Making request ("+m.noReps+"/60):", req)
             makeDomRequest("https://www.jeuxvideo.com/recherche/forums/0-51-0-1-0-1-0-blabla-18-25-ans.htm?search_in_forum="+req+"&type_search_in_forum=texte_message").then(doc => {
+                if (doc == null) {
+                    console.log("rate limit")
+                    document.querySelector("#JV_MENTIONS_status").innerHTML = "ralenti"
+                    rateLimited = true
+                    currIndex--
+                    i--
+                    if (currIndex < 0) {
+                        currIndex = msgs.length - 1
+                    }
+                    return
+                }
                 doc.querySelectorAll(".message .topic-title").forEach(e=>{
                     let found = false
                     let mid = e.getAttribute("href").split("#post_")[1]
@@ -165,6 +195,9 @@ function addNotification(e) {
                         return
                     }
                     makeDomRequest("https://www.jeuxvideo.com/forums/message/"+mid).then(msgDoc => {
+                        if (msgDoc == null) {
+                            return
+                        }
                         ignoreMsgs.push(mid)
                         msgDoc.querySelectorAll(".blockquote-jv").forEach(q=>{
                             let msgBody = q.innerText.split(":").slice(3).join(":").replace(/ +/igm, ' ').replace(/ *: */igm, ':')
