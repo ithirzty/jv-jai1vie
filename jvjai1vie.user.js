@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.93
+// @version      0.94
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -56,9 +56,9 @@ function addNotification(e) {
 
     notif.innerHTML = `
     <span class="headerAccount__dropdownAvatar" style="background-image:url('${e.image}')"></span><div class="headerAccount__dropdownDetails"><span class="headerAccount__dropdownSubInfo headerAccount__dropdownSubInfo--author">
-                            <em>${e.pseudo}</em> t'a répondu
+                            <em>${e.topic}
                         </span><a href="${e.link}" class="headerAccount__dropdownItemLabel stretched-link js-header-open-notif">
-                        <em>${e.pseudo}</em> t'a répondu dans le topic <em>${e.topic}</em>
+                        <em>${e.pseudo}</em> t'a répondu.
                     </a></div><span class="headerAccount__dropdownSubInfo"><span class="headerAccount__dropdownSubInfoDate">${e.date}</span></span>
    `
     notif.onclick = ()=> {
@@ -89,7 +89,7 @@ function addNotification(e) {
     document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.style.overflowY = "auto"
     document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").style.position = "initial"
     document.querySelector(".headerAccount__harassmentWarning").parentNode.style.display = "none"
-    document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.querySelector(".headerAccount__dropdownContainerTop").innerHTML += "<hr><div id=\"JV_MENTIONS_notifs\"><p>Fin des réponses. (status: <span id=\"JV_MENTIONS_status\">normal</span>)</p></div>"
+    document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.querySelector(".headerAccount__dropdownContainerTop").innerHTML += "<hr><div style=\"max-height: 350px;overflow: auto;\" id=\"JV_MENTIONS_notifs\"><p>Fin des réponses. (status: <span id=\"JV_MENTIONS_status\">normal</span>)</p></div>"
     document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.querySelector(".headerAccount__dropdownContainerTop").style.height = "auto"
 
     document.querySelector(".headerAccount__pm").addEventListener("click", ()=>{
