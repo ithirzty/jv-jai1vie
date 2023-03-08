@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.94
+// @version      0.95
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -89,7 +89,7 @@ function addNotification(e) {
     document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.style.overflowY = "auto"
     document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").style.position = "initial"
     document.querySelector(".headerAccount__harassmentWarning").parentNode.style.display = "none"
-    document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.querySelector(".headerAccount__dropdownContainerTop").innerHTML += "<hr><div style=\"max-height: 350px;overflow: auto;\" id=\"JV_MENTIONS_notifs\"><p>Fin des réponses. (status: <span id=\"JV_MENTIONS_status\">normal</span>)</p></div>"
+    document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.querySelector(".headerAccount__dropdownContainerTop").innerHTML += "<b style=\"width: calc(100% + 40px);text-align: center;display: block;font-size: 14px;border-top: solid 1px #4a4c4f;margin-left: -20px;\">Citations</b><div style=\"max-height: 350px;overflow: auto;\" id=\"JV_MENTIONS_notifs\"><p>Fin des réponses. (status: <span id=\"JV_MENTIONS_status\">normal</span>)</p></div><b style=\"width: calc(100% + 40px);text-align: center;display: block;font-size: 14px;border-top: solid 1px #4a4c4f;margin-left: -20px;\">Messages privés</b>"
     document.querySelector(".headerAccount__dropdownContainerContent[data-type=mp]").parentNode.querySelector(".headerAccount__dropdownContainerTop").style.height = "auto"
 
     document.querySelector(".headerAccount__pm").addEventListener("click", ()=>{
