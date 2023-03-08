@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.95
+// @version      0.96
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -143,11 +143,12 @@ function addNotification(e) {
     setInterval(()=>{
         if (rateLimited) {
             rateLimited = false
+            document.querySelector("#JV_MENTIONS_status").innerHTML = "normal"
             console.log("skipping one round")
             return
         }
         for (let i = 0, j = 0; i < 3; i++, j++) {
-            if (j > msgs.length) {
+            if (j > msgs.length || rateLimited) {
                 break
             }
             msgs[currIndex].noReps++
