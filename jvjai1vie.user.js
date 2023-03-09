@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         JVjai1vie
 // @namespace    https://alois.xyz/
-// @version      0.96
+// @version      0.97
 // @description  Notif sur mention
 // @author       bahlang
 // @match        https://www.jeuxvideo.com/forums/*
@@ -128,7 +128,6 @@ function addNotification(e) {
             }
         })
         if (!found) {
-            console.log("adding")
             msgs.push({
                 id: msg,
                 contents: e.parentElement.querySelector(".bloc-contenu .txt-msg").innerText.replace(/ +/igm, ' ').replace(/ *: */igm, ':'),
@@ -144,7 +143,6 @@ function addNotification(e) {
         if (rateLimited) {
             rateLimited = false
             document.querySelector("#JV_MENTIONS_status").innerHTML = "normal"
-            console.log("skipping one round")
             return
         }
         for (let i = 0, j = 0; i < 3; i++, j++) {
@@ -155,12 +153,10 @@ function addNotification(e) {
             window.localStorage.setItem("JV_MENTIONS_msgs", JSON.stringify(msgs))
             let m = msgs[currIndex]
             currIndex = (currIndex + 1) % msgs.length
-            if (m.noReps > 60 || Date.now() - m.date > 10800000) {
+            if (m.noReps > 90 || Date.now() - m.date > 10800000) {
                 i--
-                console.log("Skipping:", m.id)
                 continue
             }
-            console.log("Searching:", m.id)
             let req = "Le "+m.id + " " + (m.contents.replace(/\n/igm, ' ').substr(0, 100))
             req = req.replace(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9\(\)@:%_\+.~#?&\/=])*/igm, " ")
             req = req.replace(/\?|-/igm, ' ')
@@ -168,10 +164,8 @@ function addNotification(e) {
             req = req.replace(/(\d{2}):\d{2}:(\d{2})/igm, "$1$2")
             req = req.replace(/(.*) [a-zA-Z\u00C0-\u00FF]*/igm, '$1')
             req = req.replace(/\s/igm, '+')
-            console.log("Making request ("+m.noReps+"/60):", req)
             makeDomRequest("https://www.jeuxvideo.com/recherche/forums/0-51-0-1-0-1-0-blabla-18-25-ans.htm?search_in_forum="+req+"&type_search_in_forum=texte_message").then(doc => {
                 if (doc == null) {
-                    console.log("rate limit")
                     document.querySelector("#JV_MENTIONS_status").innerHTML = "ralenti"
                     rateLimited = true
                     currIndex--
@@ -209,9 +203,7 @@ function addNotification(e) {
                                 return
                             }
                             let mLookupBody = m.contents.replace(/\n/igm, '')
-                            console.log(levenshtein(msgBody, mLookupBody), msgBody, mLookupBody)
                             if (levenshtein(msgBody, mLookupBody) <= 3) {
-                                console.log("Found!")
                                 m.noReps = 0
                                 window.localStorage.setItem("JV_MENTIONS_msgs", JSON.stringify(msgs))
                                 let not = {
